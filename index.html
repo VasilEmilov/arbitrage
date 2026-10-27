@@ -514,7 +514,7 @@
         const infoNote = document.getElementById('infoNote');
 
         if (isShared) {
-            statusTextElem.textContent = "Shared Betting Mode (ON)";
+            statusTextElem.textContent = "Shared Betting Mode";
             statusTextElem.style.color = "var(--accent-green)";
             singleResults.style.display = 'none';
             sharedResults.style.display = 'block';
@@ -522,7 +522,7 @@
             labelOdd2.textContent = "Friend's Odd (Leg 2)";
             infoNote.style.display = 'block';
         } else {
-            statusTextElem.textContent = "Single Person Arbitrage (OFF)";
+            statusTextElem.textContent = "Single Person Arbitrage";
             statusTextElem.style.color = "var(--primary)";
             singleResults.style.display = 'block';
             sharedResults.style.display = 'none';
