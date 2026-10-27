@@ -63,6 +63,85 @@
             color: var(--text-muted);
         }
 
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--input-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toggle-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .toggle-status {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Toggle Switch CSS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .3s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
         .mode-selector {
             display: flex;
             background-color: var(--input-bg);
@@ -301,9 +380,16 @@
         <p>Single & Shared Betting Settlement Tool</p>
     </div>
 
-    <div class="mode-selector">
-        <button class="mode-btn active" onclick="setAppMode('single')" id="btn-app-single">Single Person Arbitrage</button>
-        <button class="mode-btn" onclick="setAppMode('shared')" id="btn-app-shared">Shared Betting Mode</button>
+    <!-- Toggle Switch for Single / Shared Mode -->
+    <div class="toggle-container">
+        <div class="toggle-label-group">
+            <span class="toggle-title">Betting Layout Mode</span>
+            <span class="toggle-status" id="toggleStatusText">Single Person Arbitrage</span>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="sharedToggle" onchange="handleToggleChange()">
+            <span class="slider"></span>
+        </label>
     </div>
 
     <!-- Stake Calculation Mode (Available for both Single and Shared) -->
@@ -319,7 +405,7 @@
                 <input type="number" id="targetProfit" step="0.5" min="0" value="10" oninput="calculate()">
             </div>
         </div>
-        <div class="info-note" id="infoNote">
+        <div class="info-note" id="infoNote" style="display: none;">
             <span>Split Rule: <strong>Always 50/50 split</strong> on profits and losses.</span>
         </div>
     </div>
@@ -415,36 +501,37 @@
 </div>
 
 <script>
-    let appMode = 'single'; // 'single' or 'shared'
     let calcMode = 'total'; // 'total' or 'leg1'
 
-    function setAppMode(mode) {
-        appMode = mode;
-        document.getElementById('btn-app-single').classList.remove('active');
-        document.getElementById('btn-app-shared').classList.remove('active');
-        document.getElementById(`btn-app-${mode}`).classList.add('active');
-
+    function handleToggleChange() {
+        const isShared = document.getElementById('sharedToggle').checked;
+        const statusTextElem = document.getElementById('toggleStatusText');
+        
         const singleResults = document.getElementById('singleResultsContainer');
         const sharedResults = document.getElementById('sharedResultsContainer');
         const labelOdd1 = document.getElementById('labelOdd1');
         const labelOdd2 = document.getElementById('labelOdd2');
         const infoNote = document.getElementById('infoNote');
 
-        if (appMode === 'single') {
-            singleResults.style.display = 'block';
-            sharedResults.style.display = 'none';
-            labelOdd1.textContent = 'Odd 1';
-            labelOdd2.textContent = 'Odd 2';
-            infoNote.style.display = 'none';
-        } else {
+        if (isShared) {
+            statusTextElem.textContent = "Shared Betting Mode (ON)";
+            statusTextElem.style.color = "var(--accent-green)";
             singleResults.style.display = 'none';
             sharedResults.style.display = 'block';
             labelOdd1.textContent = "Your Odd (Leg 1)";
             labelOdd2.textContent = "Friend's Odd (Leg 2)";
             infoNote.style.display = 'block';
+        } else {
+            statusTextElem.textContent = "Single Person Arbitrage (OFF)";
+            statusTextElem.style.color = "var(--primary)";
+            singleResults.style.display = 'block';
+            sharedResults.style.display = 'none';
+            labelOdd1.textContent = 'Odd 1';
+            labelOdd2.textContent = 'Odd 2';
+            infoNote.style.display = 'none';
         }
 
-        setCalcMode(calcMode);
+        calculate();
     }
 
     function setCalcMode(mode) {
@@ -456,6 +543,7 @@
         const totalGroup = document.getElementById('group-total-stake');
         const singleGroup = document.getElementById('group-single-stake');
         const labelSingleStake = document.getElementById('labelSingleStake');
+        const isShared = document.getElementById('sharedToggle').checked;
 
         if (mode === 'total') {
             totalGroup.style.display = 'flex';
@@ -463,7 +551,7 @@
         } else {
             totalGroup.style.display = 'none';
             singleGroup.style.display = 'flex';
-            if (appMode === 'shared') {
+            if (isShared) {
                 labelSingleStake.textContent = "Your Fixed Stake on Odd 1 ($)";
             } else {
                 labelSingleStake.textContent = "Fixed Stake on Odd 1 ($)";
@@ -474,6 +562,7 @@
     }
 
     function calculate() {
+        const isShared = document.getElementById('sharedToggle').checked;
         const odd1 = parseFloat(document.getElementById('odd1').value) || 0;
         const odd2Input = document.getElementById('odd2');
         const odd2 = parseFloat(odd2Input.value) || 0;
@@ -507,7 +596,7 @@
             document.getElementById('resTotalOutlay').textContent = '$0.00';
             document.getElementById('resPayout').textContent = '$0.00';
             document.getElementById('resNetProfit').textContent = '$0.00';
-            if (appMode === 'single') {
+            if (!isShared) {
                 document.getElementById('resSingleStake1').textContent = '$0.00';
                 document.getElementById('resSingleStake2').textContent = '$0.00';
             } else {
@@ -554,7 +643,7 @@
         netProfitElem.textContent = `${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}`;
         netProfitElem.style.color = netProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
 
-        if (appMode === 'single') {
+        if (!isShared) {
             document.getElementById('resSingleStake1').textContent = `$${stake1.toFixed(2)}`;
             document.getElementById('resSingleStake2').textContent = `$${stake2.toFixed(2)}`;
         } else {
