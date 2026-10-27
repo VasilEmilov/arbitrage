@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Arbitrage & Shared Betting Calculator</title>
+    <title>Multi-Way Arbitrage & Shared Calculator</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -26,12 +26,16 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
+        html {
+            scrollbar-gutter: stable;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             padding: 12px;
         }
@@ -41,9 +45,17 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             width: 100%;
-            max-width: 750px;
+            max-width: 800px;
+            min-width: 800px;
             padding: 16px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        @media(max-width: 820px) {
+            .calculator-card {
+                max-width: 100%;
+                min-width: 100%;
+            }
         }
 
         .header {
@@ -170,13 +182,37 @@
             color: white;
         }
 
+        .section-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
         .section-title {
             font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-muted);
-            margin-bottom: 8px;
+            margin-bottom: 0;
+        }
+
+        .btn-action {
+            background-color: rgba(59, 130, 246, 0.15);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover {
+            background-color: var(--primary);
+            color: white;
         }
 
         .grid-2 {
@@ -196,6 +232,22 @@
             font-size: 0.8rem;
             font-weight: 500;
             color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-odd-btn {
+            background: none;
+            border: none;
+            color: var(--accent-red);
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .remove-odd-btn:hover {
+            text-decoration: underline;
         }
 
         .input-wrapper {
@@ -225,6 +277,55 @@
             color: var(--accent-green);
             margin-top: 2px;
             min-height: 1rem;
+        }
+
+        /* Combined Row for ODD + Stake Result side-by-side */
+        .odds-stakes-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .odd-row-item {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 12px;
+            align-items: stretch;
+            background-color: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        @media(max-width: 480px) {
+            .odd-row-item {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stake-result-box {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stake-result-box .label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .stake-result-box .value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
         .settings-row {
@@ -294,7 +395,7 @@
             border-collapse: collapse;
             text-align: left;
             font-size: 0.8rem;
-            min-width: 480px;
+            min-width: 520px;
         }
 
         table.outcomes-table th, table.outcomes-table td {
@@ -345,46 +446,21 @@
             font-size: 1rem;
             font-weight: 700;
         }
-
-        .single-results-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .result-box {
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-        }
-
-        .result-box .label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .result-box .value {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
     </style>
 </head>
 <body>
 
 <div class="calculator-card">
     <div class="header">
-        <h1>Arbitrage Betting Calculator</h1>
-        <p>Single & Shared Betting Settlement Tool</p>
+        <h1>Multi-Way Arbitrage Calculator</h1>
+        <p>Single & Shared Multi-Outcome Betting Settlement Tool</p>
     </div>
 
     <!-- Toggle Switch for Single / Shared Mode -->
     <div class="toggle-container">
         <div class="toggle-label-group">
             <span class="toggle-title">Betting Layout Mode</span>
-            <span class="toggle-status" id="toggleStatusText">Single Person Arbitrage</span>
+            <span class="toggle-status" id="toggleStatusText">Single Person Arbitrage (OFF)</span>
         </div>
         <label class="switch">
             <input type="checkbox" id="sharedToggle" onchange="handleToggleChange()">
@@ -392,17 +468,11 @@
         </label>
     </div>
 
-    <!-- Stake Calculation Mode (Available for both Single and Shared) -->
-    <div class="mode-selector" id="stakeModeContainer">
-        <button class="mode-btn active" onclick="setCalcMode('total')" id="btn-total">Total Stake Mode</button>
-        <button class="mode-btn" onclick="setCalcMode('leg1')" id="btn-leg1">Fix Stake 1 Mode</button>
-    </div>
-
     <div class="settings-row" id="settingsRow">
         <div class="input-group">
             <label for="targetProfit">Target Profit Margin (%)</label>
             <div class="input-wrapper">
-                <input type="number" id="targetProfit" step="0.5" min="0" value="10" oninput="calculate()">
+                <input type="number" id="targetProfit" step="0.5" min="0" value="10" oninput="onProfitMarginChange()">
             </div>
         </div>
         <div class="info-note" id="infoNote" style="display: none;">
@@ -410,61 +480,43 @@
         </div>
     </div>
 
-    <div class="section-title" id="oddsSectionTitle">Odds Input</div>
-    <div class="grid-2">
-        <div class="input-group">
-            <label for="odd1" id="labelOdd1">Odd 1</label>
-            <div class="input-wrapper">
-                <input type="number" id="odd1" step="0.01" min="1.01" value="2.10" oninput="calculate()">
-            </div>
-            <div class="field-helper" id="odd1Helper"></div>
-        </div>
-        <div class="input-group">
-            <label for="odd2" id="labelOdd2">Odd 2</label>
-            <div class="input-wrapper">
-                <input type="number" id="odd2" step="0.01" min="1.01" placeholder="" oninput="calculate()">
-            </div>
-            <div class="field-helper" id="odd2Helper"></div>
-        </div>
-    </div>
-
+    <!-- Stake Input moved above odds -->
     <div class="section-title">Stake Input</div>
-    <div class="grid-2">
-        <div class="input-group" id="group-total-stake">
+    <div class="grid-2" style="margin-bottom: 16px;">
+        <div class="mode-selector" id="stakeModeContainer" style="margin-bottom: 0; grid-column: span 2; display: flex;">
+            <button class="mode-btn active" onclick="setCalcMode('total')" id="btn-total">Total Stake Mode</button>
+            <button class="mode-btn" onclick="setCalcMode('leg1')" id="btn-leg1">Fix Stake 1 Mode</button>
+        </div>
+        <div class="input-group" id="group-total-stake" style="grid-column: span 2;">
             <label for="totalStake" id="labelTotalStake">Total Combined Stake ($)</label>
             <div class="input-wrapper">
                 <input type="number" id="totalStake" step="1" min="1" value="100" oninput="calculate()">
             </div>
         </div>
-        <div class="input-group" id="group-single-stake" style="display: none;">
-            <label for="singleStake" id="labelSingleStake">Fixed Stake on Odd 1 ($)</label>
+        <div class="input-group" id="group-single-stake" style="grid-column: span 2; display: none;">
+            <label for="singleStake" id="labelSingleStake">Fixed Stake on ODD 1 ($)</label>
             <div class="input-wrapper">
                 <input type="number" id="singleStake" step="1" min="1" value="50" oninput="calculate()">
             </div>
         </div>
     </div>
 
-    <div id="statusBadge" class="status-badge arbitrage">
-        <span id="statusText">Arbitrage Opportunity!</span>
-        <span id="marginText">Profit Margin: --</span>
+    <div class="section-header-row">
+        <div class="section-title">ODDs Input & Required Stakes</div>
+        <button class="btn-action" onclick="addODD()">+ Add ODD</button>
+    </div>
+    
+    <!-- ODDs stacked vertically with corresponding stakes on the right -->
+    <div class="odds-stakes-stack" id="oddsStakesStack">
+        <!-- Dynamically injected rows -->
     </div>
 
-    <!-- SINGLE PERSON RESULTS -->
-    <div id="singleResultsContainer">
-        <div class="section-title">Required Stakes</div>
-        <div class="single-results-grid">
-            <div class="result-box">
-                <div class="label">Stake on Odd 1</div>
-                <div class="value" id="resSingleStake1">$0.00</div>
-            </div>
-            <div class="result-box">
-                <div class="label">Stake on Odd 2</div>
-                <div class="value" id="resSingleStake2">$0.00</div>
-            </div>
-        </div>
+    <div id="statusBadge" class="status-badge no-arbitrage">
+        <span id="statusText">Enter ODDs</span>
+        <span id="marginText">Margin: --</span>
     </div>
 
-    <!-- SHARED BETTING RESULTS TABLE -->
+    <!-- SHARED BETTING RESULTS TABLE (Visually toggled via visibility/display without moving card bounds abruptly) -->
     <div id="sharedResultsContainer" style="display: none;">
         <div class="section-title">Outcomes & Settlements Breakdown (50/50 Split)</div>
         <div class="outcomes-table-container">
@@ -502,35 +554,147 @@
 
 <script>
     let calcMode = 'total'; // 'total' or 'leg1'
+    let oddsValues = [null, null]; // Initial 2 empty odds
+
+    function addODD() {
+        oddsValues.push(null);
+        renderODDsAndStakes();
+        calculate();
+    }
+
+    function removeODD(index) {
+        if (oddsValues.length <= 2) {
+            alert("You must have at least 2 odds for arbitrage.");
+            return;
+        }
+        oddsValues.splice(index, 1);
+        renderODDsAndStakes();
+        calculate();
+    }
+
+    function renderODDsAndStakes() {
+        const container = document.getElementById('oddsStakesStack');
+        const isShared = document.getElementById('sharedToggle').checked;
+
+        let html = '';
+        oddsValues.forEach((val, idx) => {
+            const labelPrefix = isShared ? (idx === 0 ? "ODD 1" : `ODD ${idx + 1}`) : `ODD ${idx + 1}`;
+            // Remove button ONLY allowed if there are more than 2 odds AND it is the very last item in the list
+            const showRemove = (oddsValues.length > 2 && idx === oddsValues.length - 1);
+
+            html += `
+                <div class="odd-row-item">
+                    <div class="input-group">
+                        <label for="odd_${idx}">
+                            <span>${labelPrefix}</span>
+                            ${showRemove ? `<button class="remove-odd-btn" onclick="removeODD(${idx})">Remove</button>` : ''}
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="number" id="odd_${idx}" step="0.01" min="1.01" value="${val !== null && val !== undefined ? val : ''}" oninput="updateODDValue(${idx}, this.value)">
+                        </div>
+                        <div class="field-helper" id="helper_${idx}"></div>
+                    </div>
+                    <div class="stake-result-box">
+                        <div class="label">Required Stake</div>
+                        <div class="value" id="stake_res_${idx}">$0.00</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        updateDynamicHelpers();
+    }
+
+    function updateODDValue(index, value) {
+        const trimmed = value.trim();
+        oddsValues[index] = trimmed === "" ? null : parseFloat(trimmed);
+        updateDynamicHelpers();
+        calculate();
+    }
+
+    function onProfitMarginChange() {
+        updateDynamicHelpers();
+        calculate();
+    }
+
+    function updateDynamicHelpers() {
+        const targetProfitPercent = parseFloat(document.getElementById('targetProfit').value) || 0;
+        const targetInvSum = 1 / (1 + (targetProfitPercent / 100));
+        const numTotal = oddsValues.length;
+
+        let filledIndices = [];
+        let emptyIndices = [];
+        let sumFilledInverse = 0;
+
+        oddsValues.forEach((val, idx) => {
+            if (val !== null && !isNaN(val) && val > 1) {
+                filledIndices.push(idx);
+                sumFilledInverse += (1 / val);
+            } else {
+                emptyIndices.push(idx);
+            }
+        });
+
+        if (filledIndices.length === 0) {
+            const requiredSingleODD = numTotal / targetInvSum;
+            const reqStr = requiredSingleODD.toFixed(2);
+
+            oddsValues.forEach((_, idx) => {
+                const inputElem = document.getElementById(`odd_${idx}`);
+                const helperElem = document.getElementById(`helper_${idx}`);
+                if (inputElem) inputElem.placeholder = `e.g. ${reqStr}`;
+                if (helperElem) helperElem.textContent = `Need ≥ ${reqStr} for ${targetProfitPercent}% profit`;
+            });
+            return;
+        }
+
+        oddsValues.forEach((val, idx) => {
+            const inputElem = document.getElementById(`odd_${idx}`);
+            const helperElem = document.getElementById(`helper_${idx}`);
+            if (!inputElem || !helperElem) return;
+
+            if (val !== null && !isNaN(val) && val > 1) {
+                inputElem.placeholder = "";
+                helperElem.textContent = "";
+            } else {
+                const remainingInverseNeeded = targetInvSum - sumFilledInverse;
+                const numRemaining = emptyIndices.length;
+
+                if (remainingInverseNeeded > 0 && numRemaining > 0) {
+                    const requiredInvPerEmpty = remainingInverseNeeded / numRemaining;
+                    const requiredODD = 1 / requiredInvPerEmpty;
+                    const reqStr = requiredODD.toFixed(2);
+
+                    inputElem.placeholder = `e.g. ${reqStr}`;
+                    helperElem.textContent = `Need ≥ ${reqStr} for ${targetProfitPercent}% profit`;
+                } else {
+                    inputElem.placeholder = "N/A";
+                    helperElem.textContent = "Existing odds already exceed target";
+                }
+            }
+        });
+    }
 
     function handleToggleChange() {
         const isShared = document.getElementById('sharedToggle').checked;
         const statusTextElem = document.getElementById('toggleStatusText');
-        
-        const singleResults = document.getElementById('singleResultsContainer');
         const sharedResults = document.getElementById('sharedResultsContainer');
-        const labelOdd1 = document.getElementById('labelOdd1');
-        const labelOdd2 = document.getElementById('labelOdd2');
         const infoNote = document.getElementById('infoNote');
 
         if (isShared) {
-            statusTextElem.textContent = "Shared Betting Mode";
+            statusTextElem.textContent = "Shared Betting Mode (ON)";
             statusTextElem.style.color = "var(--accent-green)";
-            singleResults.style.display = 'none';
             sharedResults.style.display = 'block';
-            labelOdd1.textContent = "Your Odd (Leg 1)";
-            labelOdd2.textContent = "Friend's Odd (Leg 2)";
             infoNote.style.display = 'block';
         } else {
-            statusTextElem.textContent = "Single Person Arbitrage";
+            statusTextElem.textContent = "Single Person Arbitrage (OFF)";
             statusTextElem.style.color = "var(--primary)";
-            singleResults.style.display = 'block';
             sharedResults.style.display = 'none';
-            labelOdd1.textContent = 'Odd 1';
-            labelOdd2.textContent = 'Odd 2';
             infoNote.style.display = 'none';
         }
 
+        renderODDsAndStakes();
         calculate();
     }
 
@@ -552,9 +716,9 @@
             totalGroup.style.display = 'none';
             singleGroup.style.display = 'flex';
             if (isShared) {
-                labelSingleStake.textContent = "Your Fixed Stake on Odd 1 ($)";
+                labelSingleStake.textContent = "Your Fixed Stake on ODD 1 ($)";
             } else {
-                labelSingleStake.textContent = "Fixed Stake on Odd 1 ($)";
+                labelSingleStake.textContent = "Fixed Stake on ODD 1 ($)";
             }
         }
 
@@ -563,49 +727,40 @@
 
     function calculate() {
         const isShared = document.getElementById('sharedToggle').checked;
-        const odd1 = parseFloat(document.getElementById('odd1').value) || 0;
-        const odd2Input = document.getElementById('odd2');
-        const odd2 = parseFloat(odd2Input.value) || 0;
-        const targetProfitPercent = parseFloat(document.getElementById('targetProfit').value) || 0;
-
-        const odd2Helper = document.getElementById('odd2Helper');
-        
-        if (odd1 > 1) {
-            const requiredOdd2 = 1 / ((1 / (1 + (targetProfitPercent / 100))) - (1 / odd1));
-            if (requiredOdd2 > 0) {
-                const reqOddStr = requiredOdd2.toFixed(2);
-                odd2Input.placeholder = `e.g. ${reqOddStr}`;
-                odd2Helper.textContent = `Need ≥ ${reqOddStr} for ${targetProfitPercent}% profit`;
-            } else {
-                odd2Input.placeholder = "N/A";
-                odd2Helper.textContent = "Odd 1 alone exceeds target";
-            }
-        } else {
-            odd2Input.placeholder = "";
-            odd2Helper.textContent = "";
-        }
-
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
         const marginText = document.getElementById('marginText');
 
-        if (odd1 <= 1 || odd2 <= 1) {
+        let allValid = true;
+        let arbMargin = 0;
+        
+        oddsValues.forEach(odd => {
+            if (odd === null || isNaN(odd) || odd <= 1) {
+                allValid = false;
+            } else {
+                arbMargin += (1 / odd);
+            }
+        });
+
+        if (!allValid || oddsValues.length === 0) {
             statusBadge.className = 'status-badge no-arbitrage';
-            statusText.textContent = 'Enter valid odds (> 1.00)';
-            marginText.textContent = 'Profit Margin: --';
+            statusText.textContent = 'Enter valid odds for all fields';
+            marginText.textContent = 'Margin: --';
             document.getElementById('resTotalOutlay').textContent = '$0.00';
             document.getElementById('resPayout').textContent = '$0.00';
             document.getElementById('resNetProfit').textContent = '$0.00';
-            if (!isShared) {
-                document.getElementById('resSingleStake1').textContent = '$0.00';
-                document.getElementById('resSingleStake2').textContent = '$0.00';
-            } else {
+            
+            oddsValues.forEach((_, idx) => {
+                const stakeResElem = document.getElementById(`stake_res_${idx}`);
+                if (stakeResElem) stakeResElem.textContent = '$0.00';
+            });
+
+            if (isShared) {
                 document.getElementById('outcomesTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Enter valid odds and stakes to view outcomes.</td></tr>`;
             }
             return;
         }
 
-        const arbMargin = (1 / odd1) + (1 / odd2);
         const isArb = arbMargin < 1.0;
         const profitPercentage = ((1 / arbMargin) - 1) * 100;
 
@@ -619,21 +774,27 @@
             marginText.textContent = `Margin: ${profitPercentage.toFixed(2)}%`;
         }
 
-        let stake1 = 0;
-        let stake2 = 0;
+        let stakes = [];
         let totalStake = 0;
 
         if (calcMode === 'leg1') {
-            stake1 = parseFloat(document.getElementById('singleStake').value) || 0;
-            stake2 = (stake1 * odd1) / odd2;
-            totalStake = stake1 + stake2;
+            const stake1 = parseFloat(document.getElementById('singleStake').value) || 0;
+            stakes.push(stake1);
+            totalStake = stake1;
+            for (let i = 1; i < oddsValues.length; i++) {
+                const st = (stake1 * oddsValues[0]) / oddsValues[i];
+                stakes.push(st);
+                totalStake += st;
+            }
         } else {
             totalStake = parseFloat(document.getElementById('totalStake').value) || 0;
-            stake1 = (totalStake * (1 / odd1)) / arbMargin;
-            stake2 = (totalStake * (1 / odd2)) / arbMargin;
+            oddsValues.forEach(odd => {
+                const st = (totalStake * (1 / odd)) / arbMargin;
+                stakes.push(st);
+            });
         }
 
-        const payout = stake1 * odd1;
+        const payout = stakes[0] * oddsValues[0];
         const netProfit = payout - totalStake;
 
         document.getElementById('resTotalOutlay').textContent = `$${totalStake.toFixed(2)}`;
@@ -643,26 +804,24 @@
         netProfitElem.textContent = `${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}`;
         netProfitElem.style.color = netProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
 
-        if (!isShared) {
-            document.getElementById('resSingleStake1').textContent = `$${stake1.toFixed(2)}`;
-            document.getElementById('resSingleStake2').textContent = `$${stake2.toFixed(2)}`;
-        } else {
-            // Shared betting outcomes table (50/50 split always)
-            const outcomes = [
-                { key: 'odd1', name: 'Your Bet Won (Odd 1)', payout: stake1 * odd1 },
-                { key: 'odd2', name: "Friend's Bet Won (Odd 2)", payout: stake2 * odd2 },
-                { key: 'fail', name: 'Both Failed / Cancelled', payout: 0 }
-            ];
+        stakes.forEach((st, idx) => {
+            const stakeResElem = document.getElementById(`stake_res_${idx}`);
+            if (stakeResElem) {
+                stakeResElem.textContent = `$${st.toFixed(2)}`;
+            }
+        });
 
+        if (isShared) {
             let tableHtml = '';
 
-            outcomes.forEach(out => {
-                const totalNetProfit = out.payout - totalStake;
+            oddsValues.forEach((odd, idx) => {
+                const outcomePayout = stakes[idx] * odd;
+                const totalNetProfit = outcomePayout - totalStake;
                 const yourShareOfProfit = totalNetProfit / 2;
                 const friendShareOfProfit = totalNetProfit / 2;
 
-                const friendTargetFinal = stake2 + friendShareOfProfit;
-                const friendCurrentCash = (out.key === 'odd2') ? out.payout : 0;
+                const friendTargetFinal = stakes[idx] + friendShareOfProfit;
+                const friendCurrentCash = (idx > 0) ? outcomePayout : 0;
                 const settlementAmount = friendTargetFinal - friendCurrentCash;
 
                 let settlementText = '';
@@ -679,12 +838,13 @@
                     settlementColor = 'var(--accent-green)';
                 }
 
+                const outcomeName = idx === 0 ? 'Your Bet Won (ODD 1)' : `Friend's Bet Won (ODD ${idx + 1})`;
                 const yourColor = yourShareOfProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                 const friendColor = friendShareOfProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
 
                 tableHtml += `
                     <tr>
-                        <td><strong>${out.name}</strong></td>
+                        <td><strong>${outcomeName}</strong></td>
                         <td style="color: ${yourColor}; font-weight: 600;">${yourShareOfProfit >= 0 ? '+' : ''}$${yourShareOfProfit.toFixed(2)}</td>
                         <td style="color: ${friendColor}; font-weight: 600;">${friendShareOfProfit >= 0 ? '+' : ''}$${friendShareOfProfit.toFixed(2)}</td>
                         <td style="color: ${settlementColor}; font-weight: 600;">${settlementText}</td>
@@ -692,10 +852,23 @@
                 `;
             });
 
+            const failNetProfit = -totalStake;
+            const yourFailShare = failNetProfit / 2;
+            const friendFailShare = failNetProfit / 2;
+            tableHtml += `
+                <tr>
+                    <td><strong>All Failed / Cancelled</strong></td>
+                    <td style="color: var(--accent-red); font-weight: 600;">-$${Math.abs(yourFailShare).toFixed(2)}</td>
+                    <td style="color: var(--accent-red); font-weight: 600;">-$${Math.abs(friendFailShare).toFixed(2)}</td>
+                    <td style="color: var(--text-muted); font-weight: 600;">No payout collected</td>
+                </tr>
+            `;
+
             document.getElementById('outcomesTableBody').innerHTML = tableHtml;
         }
     }
 
+    renderODDsAndStakes();
     calculate();
 </script>
 
