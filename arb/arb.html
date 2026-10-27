@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Arbitrage & Shared Betting Calculator</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --input-bg: #0f172a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .calculator-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 750px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .mode-selector {
+            display: flex;
+            background-color: var(--input-bg);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper input:focus, .input-wrapper select:focus {
+            border-color: var(--primary);
+        }
+
+        .field-helper {
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            margin-top: 2px;
+            min-height: 1.125rem;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .settings-row .input-group {
+            flex: 1;
+        }
+
+        .status-badge {
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-badge.arbitrage {
+            background-color: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: var(--accent-green);
+        }
+
+        .status-badge.no-arbitrage {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: var(--accent-red);
+        }
+
+        .outcomes-table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--input-bg);
+            margin-bottom: 20px;
+        }
+
+        table.outcomes-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        table.outcomes-table th, table.outcomes-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        table.outcomes-table th {
+            background-color: rgba(30, 41, 59, 0.7);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        table.outcomes-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-item .title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .summary-item .amount {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2, .settings-row {
+                grid-template-columns: 1fr;
+            }
+            .summary-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <div class="header">
+        <h1>Enhanced Arbitrage & Shared Betting Calculator</h1>
+        <p>Calculate stakes, target odds, and view all outcomes simultaneously</p>
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('total')" id="btn-total">Total Stake Mode</button>
+        <button class="mode-btn" onclick="setMode('leg1')" id="btn-leg1">Fix Stake 1 Mode</button>
+    </div>
+
+    <div class="settings-row">
+        <div class="input-group">
+            <label for="targetProfit">Target Profit Margin for Helper (%)</label>
+            <div class="input-wrapper">
+                <input type="number" id="targetProfit" step="0.5" min="0" value="10" oninput="calculate()">
+            </div>
+        </div>
+        <div class="input-group">
+            <label for="splitMethod">Profit/Loss Sharing Split</label>
+            <div class="input-wrapper">
+                <select id="splitMethod" onchange="calculate()">
+                    <option value="proportional">Proportional to Stakes (Fair Ratio)</option>
+                    <option value="equal">50 / 50 Equal Split</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">Odds Input</div>
+    <div class="grid-2">
+        <div class="input-group">
+            <label for="odd1">Your Odd (Leg 1)</label>
+            <div class="input-wrapper">
+                <input type="number" id="odd1" step="0.01" min="1.01" value="2.10" oninput="calculate()">
+            </div>
+            <div class="field-helper" id="odd1Helper"></div>
+        </div>
+        <div class="input-group">
+            <label for="odd2">Friend's Odd (Leg 2)</label>
+            <div class="input-wrapper">
+                <input type="number" id="odd2" step="0.01" min="1.01" placeholder="" oninput="calculate()">
+            </div>
+            <div class="field-helper" id="odd2Helper"></div>
+        </div>
+    </div>
+
+    <div class="section-title">Stake Input</div>
+    <div class="grid-2">
+        <div class="input-group" id="group-total-stake">
+            <label for="totalStake">Total Combined Stake ($)</label>
+            <div class="input-wrapper">
+                <input type="number" id="totalStake" step="1" min="1" value="100" oninput="calculate()">
+            </div>
+        </div>
+        <div class="input-group" id="group-single-stake" style="display: none;">
+            <label for="singleStake">Fixed Stake on Odd 1 ($)</label>
+            <div class="input-wrapper">
+                <input type="number" id="singleStake" step="1" min="1" value="50" oninput="calculate()">
+            </div>
+        </div>
+    </div>
+
+    <div id="statusBadge" class="status-badge arbitrage">
+        <span id="statusText">Arbitrage Opportunity!</span>
+        <span id="marginText">Profit Margin: --</span>
+    </div>
+
+    <div class="section-title">Outcomes & Settlements Breakdown</div>
+    <div class="outcomes-table-container">
+        <table class="outcomes-table">
+            <thead>
+                <tr>
+                    <th>Match Outcome</th>
+                    <th>Your Net</th>
+                    <th>Friend's Net</th>
+                    <th>Required Settlement Action</th>
+                </tr>
+            </thead>
+            <tbody id="outcomesTableBody">
+                <!-- Dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-item">
+            <div class="title">Total Outlay</div>
+            <div class="amount" id="resTotalOutlay">$0.00</div>
+        </div>
+        <div class="summary-item">
+            <div class="title">Stake 1 / Stake 2</div>
+            <div class="amount" id="resStakesSummary">$0.00 / $0.00</div>
+        </div>
+        <div class="summary-item">
+            <div class="title">Guaranteed Return (Arb)</div>
+            <div class="amount" id="resPayout">$0.00</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentMode = 'total';
+
+    function setMode(mode) {
+        currentMode = mode;
+        
+        document.getElementById('btn-total').classList.remove('active');
+        document.getElementById('btn-leg1').classList.remove('active');
+        document.getElementById(`btn-${mode}`).classList.add('active');
+
+        const totalGroup = document.getElementById('group-total-stake');
+        const singleGroup = document.getElementById('group-single-stake');
+
+        if (mode === 'total') {
+            totalGroup.style.display = 'flex';
+            singleGroup.style.display = 'none';
+        } else {
+            totalGroup.style.display = 'none';
+            singleGroup.style.display = 'flex';
+        }
+
+        calculate();
+    }
+
+    function calculate() {
+        const odd1 = parseFloat(document.getElementById('odd1').value) || 0;
+        const odd2Input = document.getElementById('odd2');
+        const odd2 = parseFloat(odd2Input.value) || 0;
+        const targetProfitPercent = parseFloat(document.getElementById('targetProfit').value) || 0;
+        const splitMethod = document.getElementById('splitMethod').value;
+
+        const odd2Helper = document.getElementById('odd2Helper');
+        
+        if (odd1 > 1) {
+            const requiredOdd2 = 1 / ((1 / (1 + (targetProfitPercent / 100))) - (1 / odd1));
+            if (requiredOdd2 > 0) {
+                const reqOddStr = requiredOdd2.toFixed(2);
+                odd2Input.placeholder = `e.g. ${reqOddStr}`;
+                odd2Helper.textContent = `Need ≥ ${reqOddStr} for ${targetProfitPercent}% profit`;
+            } else {
+                odd2Input.placeholder = "N/A";
+                odd2Helper.textContent = "Odd 1 alone exceeds target";
+            }
+        } else {
+            odd2Input.placeholder = "";
+            odd2Helper.textContent = "";
+        }
+
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const marginText = document.getElementById('marginText');
+
+        if (odd1 <= 1 || odd2 <= 1) {
+            statusBadge.className = 'status-badge no-arbitrage';
+            statusText.textContent = 'Enter valid odds (> 1.00)';
+            marginText.textContent = 'Profit Margin: --';
+            document.getElementById('outcomesTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Enter valid odds and stakes to view outcomes.</td></tr>`;
+            document.getElementById('resTotalOutlay').textContent = '$0.00';
+            document.getElementById('resStakesSummary').textContent = '$0.00 / $0.00';
+            document.getElementById('resPayout').textContent = '$0.00';
+            return;
+        }
+
+        const arbMargin = (1 / odd1) + (1 / odd2);
+        const isArb = arbMargin < 1.0;
+        const profitPercentage = ((1 / arbMargin) - 1) * 100;
+
+        if (isArb) {
+            statusBadge.className = 'status-badge arbitrage';
+            statusText.textContent = 'Arbitrage Opportunity!';
+            marginText.textContent = `Profit Margin: ${profitPercentage.toFixed(2)}%`;
+        } else {
+            statusBadge.className = 'status-badge no-arbitrage';
+            statusText.textContent = 'No Arbitrage (Negative Margin)';
+            marginText.textContent = `Margin: ${profitPercentage.toFixed(2)}%`;
+        }
+
+        let stake1 = 0;
+        let stake2 = 0;
+        let totalStake = 0;
+
+        if (currentMode === 'total') {
+            totalStake = parseFloat(document.getElementById('totalStake').value) || 0;
+            stake1 = (totalStake * (1 / odd1)) / arbMargin;
+            stake2 = (totalStake * (1 / odd2)) / arbMargin;
+        } else if (currentMode === 'leg1') {
+            stake1 = parseFloat(document.getElementById('singleStake').value) || 0;
+            stake2 = (stake1 * odd1) / odd2;
+            totalStake = stake1 + stake2;
+        }
+
+        const payout = stake1 * odd1;
+
+        document.getElementById('resTotalOutlay').textContent = `$${totalStake.toFixed(2)}`;
+        document.getElementById('resStakesSummary').textContent = `$${stake1.toFixed(2)} / $${stake2.toFixed(2)}`;
+        document.getElementById('resPayout').textContent = `$${payout.toFixed(2)}`;
+
+        // Generate table rows for all 3 outcomes
+        const outcomes = [
+            { key: 'odd1', name: 'Your Bet Won (Odd 1)', payout: stake1 * odd1 },
+            { key: 'odd2', name: "Friend's Bet Won (Odd 2)", payout: stake2 * odd2 },
+            { key: 'fail', name: 'Both Failed / Cancelled', payout: 0 }
+        ];
+
+        let tableHtml = '';
+
+        outcomes.forEach(out => {
+            const totalNetProfit = out.payout - totalStake;
+
+            let yourShareOfProfit = 0;
+            let friendShareOfProfit = 0;
+
+            if (splitMethod === 'proportional' && totalStake > 0) {
+                yourShareOfProfit = totalNetProfit * (stake1 / totalStake);
+                friendShareOfProfit = totalNetProfit * (stake2 / totalStake);
+            } else {
+                yourShareOfProfit = totalNetProfit / 2;
+                friendShareOfProfit = totalNetProfit / 2;
+            }
+
+            const friendTargetFinal = stake2 + friendShareOfProfit;
+            const friendCurrentCash = (out.key === 'odd2') ? out.payout : 0;
+            const settlementAmount = friendTargetFinal - friendCurrentCash;
+
+            let settlementText = '';
+            let settlementColor = 'var(--text-main)';
+
+            if (Math.abs(settlementAmount) < 0.01) {
+                settlementText = 'No settlement needed';
+                settlementColor = 'var(--text-muted)';
+            } else if (settlementAmount > 0) {
+                settlementText = `You pay Friend $${settlementAmount.toFixed(2)}`;
+                settlementColor = 'var(--accent-amber)';
+            } else {
+                settlementText = `Friend pays You $${Math.abs(settlementAmount).toFixed(2)}`;
+                settlementColor = 'var(--accent-green)';
+            }
+
+            const yourColor = yourShareOfProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            const friendColor = friendShareOfProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+
+            tableHtml += `
+                <tr>
+                    <td><strong>${out.name}</strong></td>
+                    <td style="color: ${yourColor}; font-weight: 600;">${yourShareOfProfit >= 0 ? '+' : ''}$${yourShareOfProfit.toFixed(2)}</td>
+                    <td style="color: ${friendColor}; font-weight: 600;">${friendShareOfProfit >= 0 ? '+' : ''}$${friendShareOfProfit.toFixed(2)}</td>
+                    <td style="color: ${settlementColor}; font-weight: 600;">${settlementText}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('outcomesTableBody').innerHTML = tableHtml;
+    }
+
+    calculate();
+</script>
+
+</body>
+</html>
